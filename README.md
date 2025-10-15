@@ -1,12 +1,16 @@
 # Preview Environments
 
-## How to create preview environment?
+## How to create/update preview environment?
 1. Make changes to `./web-app/` folder
-2. Create new **Pull Request**
+2. Create new **Pull Request** or Update existing **Pull Request**
 
 There will be a comment on the Pull Request with the domain where you can access it.
 
 ---
+
+## Example Run 
+
+https://github.com/Hunter-Thompson/preview-int/pull/1
 
 ## Architecture
 
