@@ -1,0 +1,18 @@
+name: lottie-preview
+description: AWS infrastructure for preview environments with Route53, ACM, and GitHub Actions OIDC
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-typescript
+  lottie-preview:baseDomain:
+    description: Base domain for preview environments (e.g., preview.yourapp.com)
+  lottie-preview:githubOrg:
+    description: GitHub organization name
+  lottie-preview:githubRepo:
+    description: GitHub repository name
+  lottie-preview:awsRegion:
+    description: AWS region for resources (default us-east-1)

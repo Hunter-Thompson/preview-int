@@ -1,0 +1,69 @@
+name: PR Preview Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'web-app/**'
+
+env:
+  APP_NAME: web-app
+  AWS_REGION: us-east-1
+  PR_PREVIEW_BASE_DOMAIN: preview-example.live
+
+jobs:
+  deploy:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build web-app
+        working-directory: web-app
+        run: |
+          npm install
+          npm run build
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build preview automation tool
+        working-directory: preview-automation-go
+        run: |
+          go mod download
+          go build -o preview-tool .
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy preview environment
+        working-directory: preview-automation-go
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./preview-tool \
+            --action deploy \
+            --pr ${{ github.event.pull_request.number }} \
+            --app ${{ env.APP_NAME }} \
+            --repo-owner ${{ github.repository_owner }} \
+            --repo-name ${{ github.event.repository.name }} \
+            --domain ${{ env.PR_PREVIEW_BASE_DOMAIN }} \
+            --cert ${{ secrets.PR_PREVIEW_CERT_ARN }} \
+            --region ${{ env.AWS_REGION }} \
+            --source ../web-app/dist

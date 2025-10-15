@@ -1,0 +1,56 @@
+name: PR Preview Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+    paths:
+      - 'web-app/**'
+
+env:
+  APP_NAME: web-app
+  AWS_REGION: us-east-1
+  PR_PREVIEW_BASE_DOMAIN: preview-example.live
+
+jobs:
+  cleanup:
+    name: Cleanup Preview
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build preview automation tool
+        working-directory: preview-automation-go
+        run: |
+          go mod download
+          go build -o preview-tool .
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Cleanup preview environment
+        working-directory: preview-automation-go
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./preview-tool \
+            --action cleanup \
+            --pr ${{ github.event.pull_request.number }} \
+            --app ${{ env.APP_NAME }} \
+            --repo-owner ${{ github.repository_owner }} \
+            --repo-name ${{ github.event.repository.name }} \
+            --domain ${{ env.PR_PREVIEW_BASE_DOMAIN }} \
+            --region ${{ env.AWS_REGION }}

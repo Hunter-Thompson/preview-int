@@ -1,0 +1,7 @@
+config:
+  aws:region: us-east-1
+  lottie-preview:awsRegion: us-east-1
+  lottie-preview:baseDomain: preview-example.live
+  lottie-preview:githubOrg: Hunter-Thompson
+  lottie-preview:githubRepo: preview-int
+  lottie-preview:hostedZoneId: Z1008455DX1C4GZ8T05X
